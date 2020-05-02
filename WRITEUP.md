@@ -43,34 +43,42 @@ Lighting, model accuracy, and camera focal length/image size have different effe
 
 ## Model Research
 
-In investigating potential people counter models, I tried each of the following three models:
+In investigating potential people counter models, I tried each of the following models:
 
 - Model 1: SSD MobileNet v1 COCO
   - http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2018_01_28.tar.gz
   - I converted the model to an Intermediate Representation with the following arguments: 
-  -- input_model=/home/workspace/model/SSD_MobileNet_v1_COCO/frozen_inference_graph.pb
-  -- tensorflow_use_custom_operations_config=/opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/ssd_v2_support.json
-  -- tensorflow_object_detection_api_pipeline_config=/home/workspace/model/SSD_MobileNet_v1_COCO/pipeline.config
-  -- reverse_input_channels
+    - input_model=/home/workspace/model/SSD_MobileNet_v1_COCO/frozen_inference_graph.pb
+    - tensorflow_use_custom_operations_config=/opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/ssd_v2_support.json
+    - tensorflow_object_detection_api_pipeline_config=/home/workspace/model/SSD_MobileNet_v1_COCO/pipeline.config
+    - reverse_input_channels
   - The model was insufficient for the app because there were inaccurate detections for too much frames
   - I tried to improve the model for the app by addind a custom algorithm to ignore a specific number of frames after detection state changes and changing probability threshold parameter
   
 - Model 2: SSD MobileNet v2 COCO
   - http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz
   - I converted the model to an Intermediate Representation with the following arguments: 
-  -- input_model=/home/workspace/model/SSD_MobileNet_v2_COCO/frozen_inference_graph.pb
-  -- tensorflow_use_custom_operations_config=/opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/ssd_v2_support.json
-  -- tensorflow_object_detection_api_pipeline_config=/home/workspace/model/SSD_MobileNet_v2_COCO/pipeline.config
-  -- reverse_input_channels
+    - input_model=/home/workspace/model/SSD_MobileNet_v2_COCO/frozen_inference_graph.pb
+    - tensorflow_use_custom_operations_config=/opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/ssd_v2_support.json
+    - tensorflow_object_detection_api_pipeline_config=/home/workspace/model/SSD_MobileNet_v2_COCO/pipeline.config
+    - reverse_input_channels
   - The model was insufficient for the app because there were inaccurate detections for too much frames
   - I tried to improve the model for the app by addind a custom algorithm to ignore a specific number of frames after detection state changes and changing probability threshold parameter
 
 - Model 3: SSD Inception v2 COCO
   - http://download.tensorflow.org/models/object_detection/ssd_inception_v2_coco_2018_01_28.tar.gz
   - I converted the model to an Intermediate Representation with the following arguments: 
-  -- input_model=/home/workspace/model/SSD_Inception_v2_COCO/frozen_inference_graph.pb
-  -- tensorflow_use_custom_operations_config=/opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/ssd_v2_support.json
-  -- tensorflow_object_detection_api_pipeline_config=/home/workspace/model/SSD_Inception_v2_COCO/pipeline.config
-  -- reverse_input_channels
+    - input_model=/home/workspace/model/SSD_Inception_v2_COCO/frozen_inference_graph.pb
+    - tensorflow_use_custom_operations_config=/opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/ssd_v2_support.json
+    - tensorflow_object_detection_api_pipeline_config=/home/workspace/model/SSD_Inception_v2_COCO/pipeline.config
+    - reverse_input_channels
   - The model was insufficient for the app because there were inaccurate detections for too much frames and inference was too slow
   - I tried to improve the model for the app by addind a custom algorithm to ignore a specific number of frames after detection state changes and changing probability threshold parameter
+
+- Model 4: person-detection-retail-0013
+  - https://docs.openvinotoolkit.org/latest/_models_intel_person_detection_retail_0013_description_person_detection_retail_0013.html
+  - I downloaded the model with the following command: 
+    - downloader.py --name person-detection-retail-0013 --precisions FP16,INT8 --output_dir /home/workspace/model/person-detection-retail-0013/
+  - The model provided a sufficient accuracy for the app, sending the correct values to the server.
+  - The app was launched with the following command:
+    - python main.py -m /home/workspace/model/person-detection-retail-0013/FP16/person-detection-retail-0013.xml -i /home/workspace/resources/Pedestrian_Detect_2_1_1.mp4 -l /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so | ffmpeg -v warning -f rawvideo -pixel_format bgr24 -video_size 768x432 -framerate 10 -i - http://0.0.0.0:3004/fac.ffm
