@@ -35,33 +35,55 @@ class Network:
     """
 
     def __init__(self):
-        ### TODO: Initialize any class variables desired ###
+        self.plugin = None
+        self.network = None
+        self.exec_network = None
+        self.input_blob = None
+        self.output_blob = None
 
-    def load_model(self):
-        ### TODO: Load the model ###
-        ### TODO: Check for supported layers ###
-        ### TODO: Add any necessary extensions ###
-        ### TODO: Return the loaded inference plugin ###
-        ### Note: You may need to update the function parameters. ###
+    def load_model(self, model, device, cpu_extension):
+        # Load the model #
+        model_xml = model
+        model_bin = os.path.splitext(model_xml)[0] + ".bin"
+
+        # Initialize the plugin
+        self.plugin = IECore()
+
+        # Add a CPU extension, if applicable
+        if cpu_extension and "CPU" in device:
+            self.plugin.add_extension(cpu_extension, device)
+
+        # Read the IR as a IENetwork
+        self.network = IENetwork(model=model_xml, weights=model_bin)
+
+        # Check for supported layers #
+        supported_layers = self.plugin.query_network(self.network, device)
+        for layer in self.network.layers:
+            if self.network.layers[layer].name not in supported_layers.keys():
+                print(self.network.layers[layer].name + " layer not supported.")
+                quit()
+
+        # Load the IENetwork into the plugin
+        self.exec_network = self.plugin.load_network(self.network, device)
+
+        # Get the input layer
+        self.input_blob = next(iter(self.network.inputs))
+        self.output_blob = next(iter(self.network.outputs))
         return
 
     def get_input_shape(self):
-        ### TODO: Return the shape of the input layer ###
-        return
+        # Return the shape of the input layer #
+        return self.network.inputs[self.input_blob].shape
 
-    def exec_net(self):
-        ### TODO: Start an asynchronous request ###
-        ### TODO: Return any necessary information ###
-        ### Note: You may need to update the function parameters. ###
+    def exec_net(self, processed_frame):
+        # Start an asynchronous request #
+        self.exec_network.start_async(request_id=0, inputs={self.input_blob: processed_frame})
         return
 
     def wait(self):
-        ### TODO: Wait for the request to be complete. ###
-        ### TODO: Return any necessary information ###
-        ### Note: You may need to update the function parameters. ###
-        return
+        # Wait for the request to be complete. #
+        return self.exec_network.requests[0].wait(-1)
 
     def get_output(self):
-        ### TODO: Extract and return the output results
-        ### Note: You may need to update the function parameters. ###
-        return
+        # Extract and return the output results
+        return self.exec_network.requests[0].outputs[self.output_blob]
