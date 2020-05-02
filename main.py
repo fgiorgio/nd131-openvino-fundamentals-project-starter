@@ -69,8 +69,9 @@ def build_argparser():
 
 
 def connect_mqtt():
-    ### TODO: Connect to the MQTT client ###
-    client = None
+    # Connect to the MQTT client #
+    client = mqtt.Client(client_id="", clean_session=True, userdata=None)
+    client.connect(MQTT_HOST, MQTT_PORT, MQTT_KEEPALIVE_INTERVAL)
 
     return client
 
