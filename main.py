@@ -51,9 +51,8 @@ def build_argparser():
     parser.add_argument("-m", "--model", required=True, type=str,
                         help="Path to an xml file with a trained model.")
     parser.add_argument("-i", "--input", required=True, type=str,
-                        help="Path to image or video file")
-    parser.add_argument("-l", "--cpu_extension", required=False, type=str,
-                        default=None,
+                        help="Path to image or video file (type CAM for webcam)")
+    parser.add_argument("-l", "--cpu_extension", required=False, type=str, default=None,
                         help="MKLDNN (CPU)-targeted custom layers."
                              "Absolute path to a shared library with the"
                              "kernels impl.")
@@ -90,9 +89,20 @@ def infer_on_stream(args, client):
     # Set Probability threshold for detections
     prob_threshold = args.prob_threshold
 
-    ### TODO: Load the model through `infer_network` ###
+    # Load the model through `infer_network` #
+    infer_network.load_model(args.model, args.device, args.cpu_extension)
 
-    ### TODO: Handle the input stream ###
+    # Handle the input stream #
+    if args.input == "CAM":
+        args.input = 0
+    cap = cv2.VideoCapture(args.input)
+    cap.open(args.input)
+
+    # Grab the shape of the input
+    net_input_shape = infer_network.get_input_shape()
+    cap_width = int(cap.get(3))
+    cap_height = int(cap.get(4))
+    cap_fps = cap.get(5)
 
     ### TODO: Loop until stream is over ###
 
